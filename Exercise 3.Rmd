@@ -99,4 +99,40 @@ sqrt((E-lead(E,3))^2+(N-lead(N,3))^2)
   )
  # distance to pos +3 minutes
 ```
+### Task 2
+# Specify and apply treshold d
+```{r}
+Caro <- Caro %>%
+  rowwise() %>%
+  mutate(
+    stepMean = mean(c(nMinus3, nMinus2, nMinus1,nPlus1,nPlus2,nPlus3))
+  ) %>%
+  ungroup() 
+
+Caro
+```
+# Summary statistics
+```{r}
+summary(Caro$stepMean)
+boxplot(Caro$stepMean)
+hist(Caro$stepMean)
+```
+# define reasonable threshold value to differentiate between stops and moves
+```{r}
+Caro <- Caro %>% 
+  ungroup() %>%
+  mutate(static = stepMean < mean(10, na.rm = TRUE))
+
+Caro_filter <- Caro %>%
+  filter(!static)
+
+sabi_filter%>%
+  ggplot(aes(E, N))  +
+  geom_path() +
+  geom_point() +
+  coord_fixed() +
+  theme(legend.position = "bottom")
+```
+
+
 
