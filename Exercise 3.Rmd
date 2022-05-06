@@ -1,0 +1,102 @@
+---
+title: "exercise2"
+author: "Valerie Arnaldi"
+date: "6 5 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Load the necessary libraries ###
+```{r}
+library(readr)        # to import tabular data (e.g. csv)
+library(dplyr)        # to manipulate (tabular) data
+library(ggplot2)      # to visualize data
+library(udunits2)     # needed for my laptop to load "sf"
+library(sf)           # to handle spatial vector data
+library(terra)        # To handle raster data
+library(lubridate)    # To handle dates and times
+library(zoo)          #for moving window function
+```
+
+## Import data
+```{r}
+wildschwein_BE <- read_delim("wildschwein_BE_2056.csv",",")
+```
+# filter wildboar Sabi
+```{r}
+sabi <- filter(wildschwein_BE,TierName == "Sabi")
+```
+# Step b) Measure the distance from every point to every other point within the temporal window of 60 min
+```{r}
+sabi <- sabi %>%
+  mutate(
+    nMinus2 = sqrt((lag(E,2)-E)^2+(lag(N,2)-N)^2),   # distance to pos -30 minutes
+    nMinus1 = sqrt((lag(E,1)-E)^2+(lag(N,1)-N)^2),   # distance to pos -15 minutes
+    nPlus1  = sqrt((E-lead(E,1))^2+(N-lead(N,1))^2), # distance to pos +15 mintues
+    nPlus2  = sqrt((E-lead(E,2))^2+(N-lead(N,2))^2)  # distance to pos +30 minutes
+  )
+```
+# Calculate the mean distance of nMinus2, nMinus1, nPlus1, nPlus2
+# Since we want the mean value per Row, we have to explicitly specify this before mutate() with the function rowwise()
+# To remove this rowwise-grouping, we end the operation with ungroup()
+# Note that for the first two positions, we cannot calculate a stepMean since there is no Position n-2 for these positions.
+# This is also true for the last to positions (lacking a position n+2).
+```{r}
+sabi <- sabi %>%
+  rowwise() %>%
+  mutate(
+    stepMean = mean(c(nMinus2, nMinus1,nPlus1,nPlus2))
+  ) %>%
+  ungroup() 
+
+sabi
+```
+# Step c): Remove "static points
+# We can now determine if an animal is moving or not by specifying a threshold distance on stepMean
+# In our example, we use the mean value as a threshold:
+# Positions with distances below this value are considered static
+```{r}
+sabi <- sabi %>% 
+  ungroup() %>%
+  mutate(static = stepMean < mean(stepMean, na.rm = TRUE))
+
+
+sabi_filter <- sabi %>%
+  filter(!static)
+
+sabi_filter%>%
+  ggplot(aes(E, N))  +
+  geom_path() +
+  geom_point() +
+  coord_fixed() +
+  theme(legend.position = "bottom")
+```
+
+### Task 1
+# Segmentation
+# Import Data
+```{r}
+Caro <- read_delim("caro60.csv",",")
+```
+# The sampling interval for this dataset is 1 minute
+# Use a temporal window v of 6 minutes
+```{r}
+Caro <- Caro %>%
+  mutate(
+    nMinus3 = sqrt((lag(E,3)-E)^2+(lag(N,3)-N)^2),   # distance to pos -3 minutes
+    nMinus2 =
+sqrt((lag(E,2)-E)^2+(lag(N,2)-N)^2),
+ # distance to pos -2 minutes
+    nMinus1 = sqrt((lag(E,1)-E)^2+(lag(N,1)-N)^2),   # distance to pos -1 minute
+    nPlus1  = sqrt((E-lead(E,1))^2+(N-lead(N,1))^2), # distance to pos +1 mintue
+    nPlus2  = sqrt((E-lead(E,2))^2+(N-lead(N,2))^2),  # distance to pos +2 minutes
+    nPlus3  =
+sqrt((E-lead(E,3))^2+(N-lead(N,3))^2)
+  )
+ # distance to pos +3 minutes
+```
+
