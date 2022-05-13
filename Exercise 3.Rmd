@@ -1,5 +1,5 @@
 ---
-title: "exercise2"
+title: "exercise3"
 author: "Valerie Arnaldi"
 date: "6 5 2022"
 output: html_document
@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-## Load the necessary libraries ###
+Load the necessary libraries
 ```{r}
 library(tidyverse) 
 library(readr)
@@ -19,11 +19,11 @@ library(lubridate)
 library(cowplot)      
 ```
 
-## Import data
+Import data
 ```{r}
 wildschwein_BE <- read_delim("wildschwein_BE_2056.csv",",")
 ```
-# filter wildboar Sabi
+filter wildboar Sabi
 ```{r}
 sabi <- filter(wildschwein_BE,TierName == "Sabi")
 ```
@@ -37,11 +37,11 @@ sabi <- sabi %>%
     nPlus2  = sqrt((E-lead(E,2))^2+(N-lead(N,2))^2)  # distance to pos +30 minutes
   )
 ```
-# Calculate the mean distance of nMinus2, nMinus1, nPlus1, nPlus2
-# Since we want the mean value per Row, we have to explicitly specify this before mutate() with the function rowwise()
-# To remove this rowwise-grouping, we end the operation with ungroup()
-# Note that for the first two positions, we cannot calculate a stepMean since there is no Position n-2 for these positions.
-# This is also true for the last to positions (lacking a position n+2).
+Calculate the mean distance of nMinus2, nMinus1, nPlus1, nPlus2
+Since we want the mean value per Row, we have to explicitly specify this before mutate() with the function rowwise()
+To remove this rowwise-grouping, we end the operation with ungroup()
+Note that for the first two positions, we cannot calculate a stepMean since there is no Position n-2 for these positions.
+This is also true for the last to positions (lacking a position n+2).
 ```{r}
 sabi <- sabi %>%
   rowwise() %>%
@@ -53,9 +53,9 @@ sabi <- sabi %>%
 sabi
 ```
 # Step c): Remove "static points
-# We can now determine if an animal is moving or not by specifying a threshold distance on stepMean
-# In our example, we use the mean value as a threshold:
-# Positions with distances below this value are considered static
+We can now determine if an animal is moving or not by specifying a threshold distance on stepMean
+In our example, we use the mean value as a threshold:
+Positions with distances below this value are considered static
 ```{r}
 sabi <- sabi %>% 
   ungroup() %>%
@@ -72,14 +72,14 @@ sabi_filter%>%
   theme(legend.position = "bottom")
 ```
 
-### Task 1
-# Segmentation
-# Import Data
+# Task 1
+Segmentation
+Import Data
 ```{r}
 Caro <- read_delim("caro60.csv",",")
 ```
-# The sampling interval for this dataset is 1 minute
-# Use a temporal window v of 6 minutes
+The sampling interval for this dataset is 1 minute
+Use a temporal window v of 6 minutes
 ```{r}
 Caro <- Caro %>%
   mutate(
@@ -96,8 +96,8 @@ sqrt((E-lead(E,3))^2+(N-lead(N,3))^2)
  # distance to pos +3 minutes
 ```
 
-### Task 2
-# Specify and apply treshold d
+# Task 2
+Specify and apply treshold d
 ```{r}
 Caro <- Caro %>%
   rowwise() %>%
@@ -108,14 +108,14 @@ Caro <- Caro %>%
 
 Caro
 ```
-# Summary statistics
+Summary statistics
 ```{r}
 summary(Caro$stepMean)
 boxplot(Caro$stepMean)
 hist(Caro$stepMean)
 # die meisten Werte liegen zwischen 5-10
 ```
-# define reasonable threshold value to differentiate between stops and moves
+define reasonable threshold value to differentiate between stops and moves
 ```{r}
 Caro <- Caro %>% 
   ungroup() %>%
@@ -132,8 +132,8 @@ sabi_filter%>%
   theme(legend.position = "bottom")
 ```
 
-### Task 3
-# Visualize segmented trajectories
+# Task 3
+Visualize segmented trajectories
 
 ```{r}
 Caro%>%
@@ -144,21 +144,21 @@ Caro%>%
   theme(legend.position = "bottom")
 ```
 
-### Task 4
-# Segment-based analysis
-# In order to complete the last steps (c and d), we need a unique ID for each segment that we can use as a grouping variable.
+# Task 4
+Segment-based analysis
+In order to complete the last steps (c and d), we need a unique ID for each segment that we can use as a grouping variable.
 ```{r}
 rle_id <- function(vec){
   x <- rle(vec)$lengths
   as.factor(rep(seq_along(x), times=x))
   }
 ```
-# You can use the newly created function rle_id to assign unique IDs to subtrajectories
+You can use the newly created function rle_id to assign unique IDs to subtrajectories
 ```{r}
 Caro <- Caro %>%
   mutate(segment_id = rle_id(static))
 ```
-# Visualize the moving segments by colourizing them by segment_ID
+Visualize the moving segments by colourizing them by segment_ID
 ```{r}
 
 Caro_filter <- filter(Caro,static == FALSE)
@@ -190,13 +190,13 @@ Caro_Join_Filter%>%
  labs(title = "Long segments (removed segments <5)")
 ```
 
-### Task 5
-# Similarity measures on human movement
-# Import Data
+# Task 5
+Similarity measures on human movement
+Import Data
 ```{r}
 pedestrian <- read_delim("pedestrian.csv",",")
 ```
-# explore the trajectories first and get an idea on how the pedestrians moved
+explore the trajectories first and get an idea on how the pedestrians moved
 ```{r}
 pedestrian%>%
   ggplot(aes(E, N, color = TrajID))  +
@@ -209,18 +209,18 @@ theme(legend.position = "none")+
   facet_wrap(~ TrajID, nrow = 2)
 ```
 
-### Task 6
-# Calculate similarity
-# install package SimilarityMeasures
+# Task 6
+Calculate similarity
+install package SimilarityMeasures
 ```{r}
 # install.packages("SimilarityMeasures")
 # library("SimilarityMeasures")
 ```
-# get familiar with the package
+get familiar with the package
 ```{r}
 help(package = "SimilarityMeasures")
 ```
-# select and safe single trajectories
+select and safe single trajectories
 ```{r}
 Traj1 <- pedestrian %>%
   filter(TrajID == 1)
@@ -235,7 +235,7 @@ Traj5 <- pedestrian %>%
 Traj6 <- pedestrian %>%
   filter(TrajID == 6)
 ```
-# change from dataframe to matrix
+change from dataframe to matrix
 ```{r}
 Traj1_mtx <- data.matrix(Traj1)
 Traj2_mtx <- data.matrix(Traj2)
@@ -245,7 +245,7 @@ Traj5_mtx <- data.matrix(Traj5)
 Traj6_mtx <- data.matrix(Traj6)
 
 ```
-# Calculate the dynamic time warping value between two trajectories
+Calculate the dynamic time warping value between two trajectories
 ```{r}
 TJ2 <- DTW(Traj1_mtx, Traj2_mtx, 4)
 TJ3 <- DTW(Traj1_mtx, Traj3_mtx, 4)
@@ -253,9 +253,9 @@ TJ4 <- DTW(Traj1_mtx, Traj4_mtx, 4)
 TJ5 <- DTW(Traj1_mtx, Traj5_mtx, 4)
 TJ6 <- DTW(Traj1_mtx, Traj6_mtx, 4)
 ```
-# Calculate Edit Distance
-# EditDist (traj1, traj2, pointDistance = 20)
-# point distance: floating point number representing maximum distance in each dimension allowed for points to be considered equivalent
+Calculate Edit Distance
+EditDist (traj1, traj2, pointDistance = 20)
+point distance: floating point number representing maximum distance in each dimension allowed for points to be considered equivalent
 ```{r}
 TJ2_editdist <- EditDist(Traj1_mtx, Traj2_mtx, pointDistance = 4)
 TJ3_editdist <- EditDist(Traj1_mtx, Traj3_mtx, pointDistance = 4)
@@ -263,9 +263,9 @@ TJ4_editdist <- EditDist(Traj1_mtx, Traj4_mtx, pointDistance = 4)
 TJ5_editdist <- EditDist(Traj1_mtx, Traj5_mtx, pointDistance = 4)
 TJ6_editdist <- EditDist(Traj1_mtx, Traj6_mtx, pointDistance = 4)
 ```
-# Calculate Frechet
-# Frechet (traj1, traj2, testLeash = -1)
-# testleash: numeric value, which if positive, checks whether the leash can be used -> results in boolean; if values negative, then it is not used and the standard calculation is performed
+Calculate Frechet
+Frechet (traj1, traj2, testLeash = -1)
+testleash: numeric value, which if positive, checks whether the leash can be used -> results in boolean; if values negative, then it is not used and the standard calculation is performed
 ```{r}
 TJ2_frechet <- Frechet(Traj1_mtx, Traj2_mtx, testLeash = -1)
 TJ3_frechet <- Frechet(Traj1_mtx, Traj3_mtx, testLeash = -1)
@@ -273,12 +273,12 @@ TJ4_frechet <- Frechet(Traj1_mtx, Traj4_mtx, testLeash = -1)
 TJ5_frechet <- Frechet(Traj1_mtx, Traj5_mtx, testLeash = -1)
 TJ6_frechet <- Frechet(Traj1_mtx, Traj6_mtx, testLeash = -1)
 ```
-# Calculate LCSS (allowing translations)
-# LCSS (traj1, traj2, pointSpacing = -1, pointDistance = 20, errorMarg = 2, returnTrans = FALSE)
-# pointSpacing: integer value of the maximum index difference between trajectory1 and trajectory2 allowed in the calculation. A negative value sets the point spacing to unlimited.
-# pointDistance: floating point number representing the maximum distance in each dimension allowed for points to be considered equivalent.
-# errorMarg: floating point error margin used to scale the accuracy and speed of the calculation.
-#returnTrans: boolean value to allow the best translation found to be returned as well as the LCSS value if set to true
+Calculate LCSS (allowing translations)
+LCSS (traj1, traj2, pointSpacing = -1, pointDistance = 20, errorMarg = 2, returnTrans = FALSE)
+pointSpacing: integer value of the maximum index difference between trajectory1 and trajectory2 allowed in the calculation. A negative value sets the point spacing to unlimited.
+pointDistance: floating point number representing the maximum distance in each dimension allowed for points to be considered equivalent.
+errorMarg: floating point error margin used to scale the accuracy and speed of the calculation.
+returnTrans: boolean value to allow the best translation found to be returned as well as the LCSS value if set to true
 ```{r}
 TJ2_lcss <- LCSS(Traj1_mtx, Traj2_mtx, pointSpacing = 4, pointDistance = 4, errorMarg = 2, returnTrans = FALSE)
 TJ3_lcss <- LCSS(Traj1_mtx, Traj3_mtx, pointSpacing = 4, pointDistance = 4, errorMarg = 2, returnTrans = FALSE)
@@ -286,7 +286,7 @@ TJ4_lcss <- LCSS(Traj1_mtx, Traj4_mtx, pointSpacing = 4, pointDistance = 4, erro
 TJ5_lcss <- LCSS(Traj1_mtx, Traj5_mtx, pointSpacing = 4, pointDistance = 4, errorMarg = 2, returnTrans = FALSE)
 TJ6_lcss <- LCSS(Traj1_mtx, Traj6_mtx, pointSpacing = 4, pointDistance = 4, errorMarg = 2, returnTrans = FALSE)
 ```
-# Create Tibble/Dataframe from calculated values
+Create Tibble/Dataframe from calculated values
 ```{r}
 dtw <- c(TJ2, TJ3, TJ4, TJ5, TJ6)
 editdist <- c(TJ2_editdist, TJ3_editdist, TJ4_editdist, TJ5_editdist, TJ6_editdist)
@@ -295,13 +295,13 @@ lcss <- c(TJ2_lcss, TJ3_lcss, TJ4_lcss, TJ5_lcss, TJ6_lcss)
 
 Traj_all <- tibble(dtw, editdist, frechet, lcss, trajectory = c(2,3,4,5,6))
 ```
-# Umformen des Tibbles (oder Dataframes)
+Umformen des Tibbles (oder Dataframes)
 ```{r}
 Traj_long <- Traj_all %>%
   pivot_longer(names_to = "name", values_to = "value", -trajectory)
 ```
-# Visualize and compare Traj1 to Traj2-6 using different similarity measures
-# Prepare single plots for each measure method
+Visualize and compare Traj1 to Traj2-6 using different similarity measures
+Prepare single plots for each measure method
 ```{r}
 dtw_plot <- Traj_long %>%
   filter(name == "dtw") %>%
@@ -331,7 +331,7 @@ lcss_plot <- Traj_long %>%
   labs(x="",title = "LCSS")+
   geom_col(mapping = aes(x = trajectory, y = value, fill = trajectory))
 ```
-# Zusammenfuegen aller Plots
+Zusammenfuegen aller Plots
 ```{r}
 plot_grid(dtw_plot, editdist_plot, frechet_plot, lcss_plot)
 ```
